@@ -11,6 +11,7 @@ public static class ProxyServerInit
 
     const int HTTPPort = 80;
     const int HTTPSPort = 443;
+    
     static int[] HTTPSTargets = { 3000 };
     static int[] HTTPTargets = { 3001 };
     
