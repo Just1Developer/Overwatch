@@ -10,18 +10,50 @@ class ReverseProxy
     private const bool AllowOtherListenPorts = true;
     
     private int _listenPort;
-    private int _targetPort;
     private const string TargetHost = "localhost";
     
     private readonly List<int> ListenPorts = new List<int> { 80, 8080, 443 };
     private const int FallbackListenPort = 443;
     private const int FallBackTargetPort = 3000;
+    
+    private const int SSL_PORT = 443;
+    private const int HTTP_PORT = 80;
 
-    public ReverseProxy(int listenPort, int[]? targetPorts)
+    public ReverseProxy(int listenPort)
     {
         _listenPort = listenPort != ProxyServerInit.ROOT_SERVER_PORT &&
                       (AllowOtherListenPorts || ListenPorts.Contains(listenPort)) ? listenPort : FallbackListenPort;
-        _targetPort = targetPorts != null && targetPorts.Length > 0 ? targetPorts[0] : FallBackTargetPort;
+    }
+
+    private int getNewTargetPort()
+    {
+        // Prefer HTTP Servers on HTTP Port 80, in all other cases prefer HTTPS Servers.
+        if (_listenPort == HTTP_PORT)
+        {
+            int port = ProxyServerInit.getNextHTTPPort();
+            if (port == -1)
+            {
+                port = ProxyServerInit.getNextSSLPort();
+                Console.Error.WriteLine("Warning: No HTTPS Backend Server Connections available at this time. Defaulting to HTTPS Server (will be empty response)...");
+            }
+            if (port == -1)
+            {
+                Console.Error.WriteLine("Error: No Backend Server Connections available at this time.");
+            }
+            return port;
+        } else {
+            int port = ProxyServerInit.getNextSSLPort();
+            if (port == -1)
+            {
+                port = ProxyServerInit.getNextHTTPPort();
+                Console.Error.WriteLine("Warning: No HTTPS Backend Server Connections available at this time. Defaulting to HTTP Server...");
+            }
+            if (port == -1)
+            {
+                Console.Error.WriteLine("Error: No Backend Server Connections available at this time.");
+            }
+            return port;
+        }
     }
     
     public async Task Start()
@@ -41,9 +73,10 @@ class ReverseProxy
     {
         using (client)
         {
+            int targetPort = getNewTargetPort();
             NetworkStream clientStream = client.GetStream();
             TcpClient targetClient = new TcpClient();
-            await targetClient.ConnectAsync(TargetHost, _targetPort);
+            await targetClient.ConnectAsync(TargetHost, targetPort);
             NetworkStream targetStream = targetClient.GetStream();
 
             Task clientToTarget = RelayDataAsync(clientStream, targetStream);

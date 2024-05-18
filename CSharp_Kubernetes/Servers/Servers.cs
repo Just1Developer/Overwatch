@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using CSharp_Kubernetes.Proxy;
 
 namespace CSharp_Kubernetes.Servers;
 
@@ -83,15 +84,6 @@ public class Servers
 
         return Task.WhenAll(taskPool);
     }
-    
-    /*
-     * 
-       var t = new Thread(() =>
-       {
-           
-       });
-       t.Start();
-     */
 
     private static async Task RunNewProcess(string script)
     {
@@ -119,6 +111,11 @@ public class Servers
                         {
                             int port = int.Parse(e.Data.Split(':')[2]);
                             Console.WriteLine("Registering new port: " + port);
+                            
+                            if (e.Data.Contains("HTTPS")) ProxyServerInit.AddSSLPort(port);
+                            else if (e.Data.Contains("HTTP")) ProxyServerInit.AddSSLPort(port);
+                            else if (e.Data.Contains("ROOT")) ProxyServerInit.SetRootPort(port);
+                            else Console.WriteLine("Failed to read server type in " + e.Data);
                         }
                         catch (Exception)
                         {
