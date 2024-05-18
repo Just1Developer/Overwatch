@@ -1,4 +1,5 @@
-namespace CSharp_Kubernetes;
+namespace CSharp_Kubernetes.Proxy;
+
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -18,7 +19,8 @@ class ReverseProxy
 
     public ReverseProxy(int listenPort, int[]? targetPorts)
     {
-        _listenPort = AllowOtherListenPorts || ListenPorts.Contains(listenPort) ? listenPort : FallbackListenPort;
+        _listenPort = listenPort != ProxyServerInit.ROOT_SERVER_PORT &&
+                      (AllowOtherListenPorts || ListenPorts.Contains(listenPort)) ? listenPort : FallbackListenPort;
         _targetPort = targetPorts != null && targetPorts.Length > 0 ? targetPorts[0] : FallBackTargetPort;
     }
     
@@ -28,7 +30,7 @@ class ReverseProxy
         listener.Start();
         Console.WriteLine($"Listening on port {_listenPort}...");
 
-        while (true)
+        while (ProxyServerInit.ProxyRunning)
         {
             TcpClient client = await listener.AcceptTcpClientAsync();
             _ = HandleClientAsync(client);
