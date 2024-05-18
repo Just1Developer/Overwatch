@@ -21,7 +21,7 @@ class ReverseProxy
 
     public ReverseProxy(int listenPort)
     {
-        _listenPort = listenPort != ProxyServerInit.ROOT_SERVER_PORT &&
+        _listenPort = listenPort != ProxyServerHandler.ROOT_SERVER_PORT &&
                       (AllowOtherListenPorts || ListenPorts.Contains(listenPort)) ? listenPort : FallbackListenPort;
     }
 
@@ -30,10 +30,10 @@ class ReverseProxy
         // Prefer HTTP Servers on HTTP Port 80, in all other cases prefer HTTPS Servers.
         if (_listenPort == HTTP_PORT)
         {
-            int port = ProxyServerInit.getNextHTTPPort();
+            int port = ProxyServerHandler.getNextHTTPPort();
             if (port == -1)
             {
-                port = ProxyServerInit.getNextSSLPort();
+                port = ProxyServerHandler.getNextSSLPort();
                 Console.Error.WriteLine("Warning: No HTTPS Backend Server Connections available at this time. Defaulting to HTTPS Server (will be empty response)...");
             }
             if (port == -1)
@@ -42,10 +42,10 @@ class ReverseProxy
             }
             return port;
         } else {
-            int port = ProxyServerInit.getNextSSLPort();
+            int port = ProxyServerHandler.getNextSSLPort();
             if (port == -1)
             {
-                port = ProxyServerInit.getNextHTTPPort();
+                port = ProxyServerHandler.getNextHTTPPort();
                 Console.Error.WriteLine("Warning: No HTTPS Backend Server Connections available at this time. Defaulting to HTTP Server...");
             }
             if (port == -1)
@@ -62,7 +62,7 @@ class ReverseProxy
         listener.Start();
         Console.WriteLine($"Listening on port {_listenPort}...");
 
-        while (ProxyServerInit.ProxyRunning)
+        while (ProxyServerHandler.ProxyRunning)
         {
             TcpClient client = await listener.AcceptTcpClientAsync();
             _ = HandleClientAsync(client);

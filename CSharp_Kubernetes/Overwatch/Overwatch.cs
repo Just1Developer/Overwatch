@@ -13,7 +13,7 @@ public class Overwatch
         
         ConcurrentBag<Task> tasks = new();
         tasks.Add(Servers.Servers.LaunchServers(rootServer: false));
-        tasks.Add(ProxyServerInit.StartReverseProxies());
+        tasks.Add(ProxyServerHandler.StartReverseProxies());
         
         Console.WriteLine("Overwatch is live.");
 

@@ -1,6 +1,6 @@
 namespace CSharp_Kubernetes.Proxy;
 
-public static class ProxyServerInit
+public static class ProxyServerHandler
 {
     /**
      * The port on which runs the server with root login option.

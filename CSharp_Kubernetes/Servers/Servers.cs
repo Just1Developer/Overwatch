@@ -112,9 +112,9 @@ public class Servers
                             int port = int.Parse(e.Data.Split(':')[2]);
                             Console.WriteLine("Registering new port: " + port);
                             
-                            if (e.Data.Contains("HTTPS")) ProxyServerInit.AddSSLPort(port);
-                            else if (e.Data.Contains("HTTP")) ProxyServerInit.AddSSLPort(port);
-                            else if (e.Data.Contains("ROOT")) ProxyServerInit.SetRootPort(port);
+                            if (e.Data.Contains("HTTPS")) ProxyServerHandler.AddSSLPort(port);
+                            else if (e.Data.Contains("HTTP")) ProxyServerHandler.AddSSLPort(port);
+                            else if (e.Data.Contains("ROOT")) ProxyServerHandler.SetRootPort(port);
                             else Console.WriteLine("Failed to read server type in " + e.Data);
                         }
                         catch (Exception)
