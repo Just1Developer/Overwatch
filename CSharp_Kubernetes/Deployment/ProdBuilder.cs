@@ -12,9 +12,12 @@ public static class ProdBuilder
     public static async Task<bool> UpdateProductionBuild()
     {
         // Step 1: If existent, back up directory.
-        string repopath = Executable.GetRelativeRepoPath();     // Ends with '/'
-        await GenerateProdBackup(repopath);
-        File.Delete(repopath + ".next");
+        string repopath = Executable.GetRelativeRepoPath(); // Ends with '/'
+        if (Directory.Exists(repopath + ".next"))
+        {
+            GenerateProdBackup(repopath);
+            Directory.Delete(repopath + ".next");
+        }
 
         Process process = Executable.GetProcess(Executable.GetWebserverCmdInfo("git pull origin main"));
         await Executable.RunProcessAsync(process,
@@ -22,7 +25,7 @@ public static class ProdBuilder
         if (process.ExitCode != 0)
         {
             Console.Error.WriteLine("Git pull failed, aborting prod update since no new version exists.");
-            RestoreOldProductionBuild(repopath);
+            await RestoreOldProductionBuild(repopath);
             return false;
         }
 
@@ -37,13 +40,13 @@ public static class ProdBuilder
             "PNPM BUILD", true);
         if (builder.ExitCode != 0)
         {
-            
+
             // Build Failed! Let's delete node_modules and try again
-            
+
             Console.Error.WriteLine("Build failed, deleting node_modules and package locks and retrying...");
 
             await ClearNodeModules(repopath);
-            
+
             await Executable.RunProcessAsync(Executable.GetProcess(Executable.GetWebserverCmdInfo("pnpm i")),
                 "PNPM INSTALL", true);
 
@@ -53,11 +56,11 @@ public static class ProdBuilder
             if (builder.ExitCode != 0)
             {
                 Console.Error.WriteLine("Build failed with reinstalling node_modules aborting update.");
-                RestoreOldProductionBuild(repopath);
+                await RestoreOldProductionBuild(repopath);
                 return false;
             }
         }
-        
+
         // Working production build exists now.
         return true;
     }
@@ -70,12 +73,12 @@ public static class ProdBuilder
     /// Inside parent folder of Repository: /backup/%time%/prod/...
     /// </summary>
     /// <param name="repopath">The repository path.</param>
-    private static async Task GenerateProdBackup(string repopath)
+    private static void GenerateProdBackup(string repopath)
     {
         if (!Directory.Exists(repopath + ".next")) return;
-        string targetFolder = repopath + "../backup/" + DateTime.Now.ToString("yyyy-MM-dd_tt.hh:mm:ss") + "/prod/";
+        string targetFolder = repopath + "../backup/" + DateTime.Now.ToString("yyyy-MM-dd_tt.hh:mm:ss") + "/";
         Directory.CreateDirectory(targetFolder);
-        await Task.Run(() => CopyFilesRecursively(repopath + ".next", targetFolder));
+        Directory.Move(repopath + ".next", $"{targetFolder}prod/");
     }
 
     /// <summary>
@@ -91,7 +94,7 @@ public static class ProdBuilder
     /// <summary>
     /// Restores the newest old production build.
     /// </summary>
-    private static void RestoreOldProductionBuild(string repopath)
+    private static async Task RestoreOldProductionBuild(string repopath)
     {
         var targetFolder = Directory.GetDirectories(repopath + "../backup/");
         if (targetFolder.Length == 0)
@@ -99,14 +102,30 @@ public static class ProdBuilder
             Console.Error.WriteLine("Error: No old Prod Backup available");
             return;
         }
-        string path = $"{repopath}../backup/{targetFolder[0]}/prod/";
-        CopyFilesRecursively(path, repopath + ".next");
-        Directory.Delete($"{path}..");
+
+        string path;
+        int i = 0;
+        do
+        {
+            path = $"{targetFolder[i++]}/prod/";
+        } while (!Directory.Exists(path) && i < targetFolder.Length);
+
+        if (!Directory.Exists(path))
+        {
+            Console.Error.WriteLine("Error: No old Prod Backup available");
+            return;
+        }
+        
+        Directory.Move(path, repopath + ".next");
+        path = $"{path}..";
+        Directory.Delete(path, true);
+        await ProxyServerHandler.WaitFor(() => !Directory.Exists(path));
     }
-    
+
     // FROM: https://stackoverflow.com/a/3822913
     private static void CopyFilesRecursively(string sourcePath, string targetPath)
     {
+        if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
         //Now Create all of the directories
         foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
         {
@@ -114,9 +133,19 @@ public static class ProdBuilder
         }
 
         //Copy all the files & Replaces any files with the same name
-        foreach (string newPath in Directory.GetFiles(sourcePath, "*.*",SearchOption.AllDirectories))
+        foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
         {
             File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
         }
     }
+
+    public static void _GenerateProdBackup(string repopath)
+    {
+        GenerateProdBackup(repopath);
+    }
+    public static async Task _RestoreOldProductionBuild(string repopath)
+    {
+        await RestoreOldProductionBuild(repopath);
+    }
+
 }
