@@ -75,7 +75,6 @@ class ReverseProxy
         {
             var time = DateTime.Now;
             int targetPort = getNewTargetPort();
-            Console.WriteLine("Time to get port: " + (DateTime.Now - time).TotalMilliseconds + "ms");
             NetworkStream clientStream = client.GetStream();
             TcpClient targetClient = new TcpClient();
             await targetClient.ConnectAsync(TargetHost, targetPort);
