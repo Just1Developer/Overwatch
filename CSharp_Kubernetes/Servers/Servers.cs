@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using CSharp_Kubernetes.Overwatch;
 using CSharp_Kubernetes.Proxy;
 
 namespace CSharp_Kubernetes.Servers;
@@ -11,33 +12,13 @@ public class Servers
     /// Root aint available (implemented) yet.
     /// </summary>
     private const bool ROOT_AVAILABLE = false;
-    private const bool IS_DEBUG_MODE = true;
-    
-    private const string run_process_win = "cmd.exe";
-    private const string run_process_unix = "/bin/bash";
 
-    // Windows versions are 0,1,2,3; 4 is unix, 5 is XBox, 6 is MacOS X, 7 is other
-    private static readonly bool IS_WINDOWS = (int) Environment.OSVersion.Platform < 4;
-    private static readonly string run_process_cmd = IS_WINDOWS ? run_process_win : run_process_unix;
-
-    public static void PrintInfo()
-    {
-        Console.WriteLine($"OS Version: {Environment.OSVersion.Platform} ({(int) Environment.OSVersion.Platform})");
-        Console.WriteLine($"Is Windows: {IS_WINDOWS}");
-        Console.WriteLine($"run_process_cmd: {run_process_cmd}");
-    }
-    
     public const bool StartDevServerAlternative = true;
-    private const string relativePathProd = @"/Streamy/";
-    private const string absolutePathMacDebug = "../../../../../../WebstormProjects/StreamingService/";
-    private const string absolutePathWinDebug = absolutePathMacDebug; // Todo
-    private static readonly string workingDir = Debugger.IsAttached || IS_DEBUG_MODE ?
-        (IS_WINDOWS ? absolutePathWinDebug : absolutePathMacDebug) : relativePathProd;
-
     private const string _script_ssl = "ssl";
     private const string _script_ssldev = "ssldev";
     private const string _script_root = "root";
     private const string _script_http = "http";
+    private const string _script_httpdev = "httpdev";
 
     private static string Command(string cmd) => $"-c \"pnpm {cmd}\"";
     
@@ -71,93 +52,68 @@ public class Servers
         
         for (int https = 0; https < httpsServers; ++https)
         {
-            taskPool.Add(RunNewProcess(script: _script_ssl));
+            taskPool.Add(RunNewProcess(script: _script_ssl, altScript: _script_ssldev));
         }
         for (int http = 0; http < httpServers; ++http)
         {
-            taskPool.Add(RunNewProcess(script: _script_http));
+            taskPool.Add(RunNewProcess(script: _script_http, altScript: _script_httpdev));
         }
         if (rootServer && ROOT_AVAILABLE)
         {
-            taskPool.Add(RunNewProcess(script: _script_root));
+            taskPool.Add(RunNewProcess(script: _script_root, ""));
         }
 
         return Task.WhenAll(taskPool);
     }
 
-    private static async Task RunNewProcess(string script)
+    private static async Task RunNewProcess(string script, string altScript)
     {
-        Process process = new Process();
-        process.StartInfo = _startInfo(script);
-        var tcs = new TaskCompletionSource<bool>();
-
-        try
+        Process process = Executable.GetProcess(_startInfo(script));
+        string str_port = "?";
+        process.OutputDataReceived += async (sender, e) =>
         {
-            process.EnableRaisingEvents = true;  // Enable event raising
-            process.Exited += (sender, args) =>
+            if (!string.IsNullOrEmpty(e.Data))
             {
-                tcs.SetResult(true);  // Set the result when the process exits
-                process.Dispose();  // Dispose the process object
-            };
-
-            string str_port = "?";
-            process.OutputDataReceived += (sender, e) =>
-            {
-                if (!string.IsNullOrEmpty(e.Data))
+                Console.WriteLine($">> [{script}#{str_port}]: {e.Data}");
+                if (e.Data.Contains("Server ready on"))
                 {
-                    Console.WriteLine($">> [{script}#{str_port}]: {e.Data}");
-                    if (e.Data.Contains("Server ready on"))
+                    try
                     {
-                        try
-                        {
-                            int port = int.Parse(e.Data.Split(':')[2]);
-                            Console.WriteLine("Registering new port: " + port);
-                            str_port = port.ToString();
+                        int port = int.Parse(e.Data.Split(':')[2]);
+                        Console.WriteLine("Registering new port: " + port);
+                        str_port = port.ToString();
                             
-                            if (e.Data.Contains("HTTPS")) ProxyServerHandler.AddSSLPort(port);
-                            else if (e.Data.Contains("HTTP")) ProxyServerHandler.AddSSLPort(port);
-                            else if (e.Data.Contains("ROOT")) ProxyServerHandler.SetRootPort(port);
-                            else Console.WriteLine("Failed to read server type in " + e.Data);
-                        }
-                        catch (Exception)
-                        {
-                            string outp = e.Data ?? "<no message>";
-                            Console.WriteLine($"Tried and failed to register port: {(outp.Contains(':') ? outp.Split(':')[2] : outp)} (registration failed).");
-                        }
+                        if (e.Data.Contains("HTTPS")) ProxyServerHandler.AddSSLPort(port);
+                        else if (e.Data.Contains("HTTP")) ProxyServerHandler.AddSSLPort(port);
+                        else if (e.Data.Contains("ROOT")) ProxyServerHandler.SetRootPort(port);
+                        else Console.WriteLine("Failed to read server type in " + e.Data);
+                    }
+                    catch (Exception)
+                    {
+                        string outp = e.Data ?? "<no message>";
+                        Console.WriteLine($"Tried and failed to register port: {(outp.Contains(':') ? outp.Split(':')[2] : outp)} (registration failed).");
                     }
                 }
-            };
-            
-            process.Start();
-            process.BeginOutputReadLine();  // Begin asynchronous output reading
-            Console.WriteLine("Starting process " + process.StartInfo.WorkingDirectory + "/" + process.StartInfo.FileName);
-            
-            await tcs.Task;
-            Console.WriteLine("Process completed with exit code: " + process.ExitCode);
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("An error occurred: " + e.Message);
-        }
+                else if (e.Data.Contains("Command failed with exit code") && StartDevServerAlternative && !string.IsNullOrEmpty(altScript))
+                {
+                    // => Starting failed, try again with alternative script. This is usually the dev script.
+                    Console.WriteLine($"////////////////////////////////////////////////////////////////////\n" +
+                                      $"Failed to start {script} Server. Switching to alt script {altScript}..." +
+                                      $"\n////////////////////////////////////////////////////////////////////");
+                    await RunNewProcess(script: altScript, altScript: "");
+                    // This process will terminate anyway
+                    // Todo: let this process die. Not necessary, so no pressing matter
+                }
+            }
+        };
+
+        // Don't add logging event, since we handle that separately.
+        await Executable.RunProcessAsync(process, "", false);
     }
 
-    private static ProcessStartInfo _startInfo(string script) => new ()
-    {
-        WorkingDirectory = workingDir,
-        FileName = run_process_cmd,
-        Arguments = Command(script),
-        CreateNoWindow = true, // This prevents the command window from showing up
-        UseShellExecute = false, // Necessary to redirect input/output if needed
-        RedirectStandardOutput = true, // To capture the output if needed
-    };
+    private static ProcessStartInfo _startInfo(string script) =>
+        Executable.GetWebserverCmdInfo(Command(script));
 
-    private static ProcessStartInfo _debugStartInfo(string script, string workingDir) => new ()
-    {
-        WorkingDirectory = workingDir,
-        FileName = run_process_cmd,
-        Arguments = script,
-        CreateNoWindow = true, // This prevents the command window from showing up
-        UseShellExecute = false, // Necessary to redirect input/output if needed
-        RedirectStandardOutput = true, // To capture the output if needed
-    };
+    private static ProcessStartInfo _debugStartInfo(string script, string workingDir) => 
+        Executable.GetCmdInfo(workingDir, script);
 }
