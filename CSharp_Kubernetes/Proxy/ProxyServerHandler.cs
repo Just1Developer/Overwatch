@@ -9,8 +9,10 @@ public static class ProxyServerHandler
      * The port on which runs the server with root login option.
      * Proxy must never be able do redirect to this port, it should
      * only be accessible on the root server or in the same network.
+     *
+     * Default: -1
      */
-    public static int ROOT_SERVER_PORT { get; private set; } = 4000;
+    public static int ROOT_SERVER_PORT { get; private set; } = -1;
 
     const int HTTPPort = 80;
     const int HTTPSPort = 443;

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Text;
 using CSharp_Kubernetes.Proxy;
 
 namespace CSharp_Kubernetes.Overwatch;
@@ -34,17 +35,40 @@ public class Overwatch
                 {
                     Console.WriteLine("Overwatch Updates are a WIP");
                 }
-                if (line == "update")
+                else if (line == "update")
                 {
                     Console.WriteLine("Updates are a WIP");
                 }
-                if (line == "on")
+                else if (line == "on")
                 {
                     Console.WriteLine("Yes");
                 }
-                if (line == "list")
+                else if (line == "list")
                 {
-                    Console.WriteLine("Will be implementing that soon");
+                    StringBuilder ssl = new StringBuilder();
+                    foreach (int port in ProxyServerHandler.SSLSecurePorts)
+                    {
+                        ssl.AppendLine($"  -> {port}");
+                    }
+                    if (ssl.Length == 0) ssl.AppendLine("Running SSL Host Proxies:\n  None");
+                    else ssl.Insert(0, "Running SSL Host Proxies:\n");
+                    
+                    StringBuilder http = new StringBuilder();
+                    foreach (int port in ProxyServerHandler.InsecurePorts)
+                    {
+                        http.AppendLine($"  -> {port}");
+                    }
+                    if (http.Length == 0) http.AppendLine("Running HTTP Host Proxies:\n  None");
+                    else http.Insert(0, "Running HTTP Host Proxies:\n");
+
+                    string host = ProxyServerHandler.ROOT_SERVER_PORT < 0 ? "ROOT: -" : $"ROOT: {ProxyServerHandler.ROOT_SERVER_PORT}";
+                    
+                    Console.WriteLine("\n/////////////////////////////////////////////////////" +
+                                      "\n\nComplete Proxy List:" +
+                                      $"\n{ssl}" +
+                                      $"\n{http}" +
+                                      $"\n{host}" +
+                                      "\n\n/////////////////////////////////////////////////////\n");
                 }
                 else
                 {
