@@ -159,14 +159,7 @@ public static class ProxyServerHandler
         {
             // Port was now removed, so is accepting no more requests.
             // Now, wait until the requests are finished.
-            var tcs = new TaskCompletionSource<bool>();
-            while (!tcs.Task.IsCompleted)
-            {
-                if (PortActiveRequests[port] == BigInteger.Zero)
-                    tcs.SetResult(true);
-            }
-
-            await tcs.Task;
+            await WaitFor(() => PortActiveRequests[port] == BigInteger.Zero);
             PortActiveRequests.Remove(port);
         }
 
@@ -182,5 +175,17 @@ public static class ProxyServerHandler
         if (!restart) return;
         // Restart server
         Servers.Servers.LaunchSingular(type);
+    }
+
+    internal static async Task WaitFor(Func<bool> waitForFunction)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        while (!tcs.Task.IsCompleted)
+        {
+            if (waitForFunction.Invoke())
+                tcs.SetResult(true);
+        }
+
+        await tcs.Task;
     }
 }

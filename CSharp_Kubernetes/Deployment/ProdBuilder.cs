@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using CSharp_Kubernetes.Overwatch;
+using CSharp_Kubernetes.Proxy;
 
 namespace CSharp_Kubernetes.Deployment;
 
@@ -21,7 +22,7 @@ public static class ProdBuilder
         if (process.ExitCode != 0)
         {
             Console.Error.WriteLine("Git pull failed, aborting prod update since no new version exists.");
-            await RestoreOldProductionBuild();
+            RestoreOldProductionBuild(repopath);
             return false;
         }
 
@@ -41,7 +42,7 @@ public static class ProdBuilder
             
             Console.Error.WriteLine("Build failed, deleting node_modules and package locks and retrying...");
 
-            await ClearNodeModules();
+            await ClearNodeModules(repopath);
             
             await Executable.RunProcessAsync(Executable.GetProcess(Executable.GetWebserverCmdInfo("pnpm i")),
                 "PNPM INSTALL", true);
@@ -52,7 +53,7 @@ public static class ProdBuilder
             if (builder.ExitCode != 0)
             {
                 Console.Error.WriteLine("Build failed with reinstalling node_modules aborting update.");
-                await RestoreOldProductionBuild();
+                RestoreOldProductionBuild(repopath);
                 return false;
             }
         }
@@ -80,17 +81,27 @@ public static class ProdBuilder
     /// <summary>
     /// Deletes the node_modules folder.
     /// </summary>
-    private static async Task ClearNodeModules()
+    private static async Task ClearNodeModules(string repopath)
     {
-        
+        var path = $"{repopath}node_modules";
+        Directory.Delete(path);
+        await ProxyServerHandler.WaitFor(() => !Directory.Exists(path));
     }
 
     /// <summary>
     /// Restores the newest old production build.
     /// </summary>
-    private static async Task RestoreOldProductionBuild()
+    private static void RestoreOldProductionBuild(string repopath)
     {
-        
+        var targetFolder = Directory.GetDirectories(repopath + "../backup/");
+        if (targetFolder.Length == 0)
+        {
+            Console.Error.WriteLine("Error: No old Prod Backup available");
+            return;
+        }
+        string path = $"{repopath}../backup/{targetFolder[0]}/prod/";
+        CopyFilesRecursively(path, repopath + ".next");
+        Directory.Delete($"{path}..");
     }
     
     // FROM: https://stackoverflow.com/a/3822913
