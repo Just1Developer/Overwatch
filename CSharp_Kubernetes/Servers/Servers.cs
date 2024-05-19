@@ -100,17 +100,19 @@ public class Servers
                 process.Dispose();  // Dispose the process object
             };
 
+            string str_port = "?";
             process.OutputDataReceived += (sender, e) =>
             {
                 if (!string.IsNullOrEmpty(e.Data))
                 {
-                    Console.WriteLine($">> [{script}]: {e.Data}");
+                    Console.WriteLine($">> [{script}#{str_port}]: {e.Data}");
                     if (e.Data.Contains("Server ready on"))
                     {
                         try
                         {
                             int port = int.Parse(e.Data.Split(':')[2]);
                             Console.WriteLine("Registering new port: " + port);
+                            str_port = port.ToString();
                             
                             if (e.Data.Contains("HTTPS")) ProxyServerHandler.AddSSLPort(port);
                             else if (e.Data.Contains("HTTP")) ProxyServerHandler.AddSSLPort(port);

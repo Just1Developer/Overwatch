@@ -26,8 +26,8 @@ public static class ProxyServerHandler
         if (SSLPorts == null) SSLPorts = new int[0];
         if (HTTPPorts == null) HTTPPorts = new int[0];
         
-        SSLSecurePorts.AddRange(SSLPorts);
-        InsecurePorts.AddRange(HTTPPorts);
+        foreach (int port in SSLPorts) AddSSLPort(port);
+        foreach (int port in HTTPPorts) AddHTTPPort(port);
         
         // Later: Allow for proxy reboot
         if (ProxyRunning)
@@ -54,12 +54,42 @@ public static class ProxyServerHandler
 
     public static void AddSSLPort(int port)
     {
-        if(!SSLSecurePorts.Contains(port) && ROOT_SERVER_PORT != port) SSLSecurePorts.Add(port);
+        if (!SSLSecurePorts.Contains(port))
+        {
+            if (ROOT_SERVER_PORT != port)
+            {
+                SSLSecurePorts.Add(port);
+                Console.WriteLine($"Added Port {port} to HTTPS proxy.");
+            }
+            else
+            {
+                Console.WriteLine($"Adding of port {port} denied: Port is ROOT-Host.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Adding of port {port} denied: Port is already in HTTPS proxy.");
+        }
     }
 
     public static void AddHTTPPort(int port)
     {
-        if(!InsecurePorts.Contains(port) && ROOT_SERVER_PORT != port) InsecurePorts.Add(port);
+        if (!InsecurePorts.Contains(port))
+        {
+            if (ROOT_SERVER_PORT != port)
+            {
+                InsecurePorts.Add(port);
+                Console.WriteLine($"Added Port {port} to HTTP proxy.");
+            }
+            else
+            {
+                Console.WriteLine($"Adding of port {port} denied: Port is ROOT-Host.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"Adding of port {port} denied: Port is already in HTTP proxy.");
+        }
     }
 
     public static void SetRootPort(int port)
