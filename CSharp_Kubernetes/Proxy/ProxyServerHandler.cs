@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Numerics;
+
 namespace CSharp_Kubernetes.Proxy;
 
 public static class ProxyServerHandler
@@ -16,6 +19,9 @@ public static class ProxyServerHandler
     internal static List<int> InsecurePorts = new();
     internal static int SSL_PTR = 0;
     internal static int HTTP_PTR = 0;
+    
+    internal static Dictionary<int, Process> PortProcesses = new ();
+    internal static Dictionary<int, BigInteger> PortActiveRequests = new ();
     
     public static bool ProxyRunning { get; private set; } = false;
     private static bool _tasksFinished = true;
@@ -59,6 +65,7 @@ public static class ProxyServerHandler
             if (ROOT_SERVER_PORT != port)
             {
                 SSLSecurePorts.Add(port);
+                PortActiveRequests.Add(port, BigInteger.Zero);
                 Console.WriteLine($"Added Port {port} to HTTPS proxy.");
             }
             else
@@ -79,6 +86,7 @@ public static class ProxyServerHandler
             if (ROOT_SERVER_PORT != port)
             {
                 InsecurePorts.Add(port);
+                PortActiveRequests.Add(port, BigInteger.Zero);
                 Console.WriteLine($"Added Port {port} to HTTP proxy.");
             }
             else
@@ -97,6 +105,7 @@ public static class ProxyServerHandler
         InsecurePorts.Remove(port);
         SSLSecurePorts.Remove(port);
         ROOT_SERVER_PORT = port;
+        PortActiveRequests.Add(port, BigInteger.Zero);
     }
 
     /// <summary>
@@ -119,5 +128,66 @@ public static class ProxyServerHandler
         if (InsecurePorts.Count == 0) return -1;
         if (HTTP_PTR >= InsecurePorts.Count) HTTP_PTR = 0;
         return InsecurePorts[HTTP_PTR++];
+    }
+
+    /// <summary>
+    /// Removes the server with the given SSL port.
+    /// Marks the server with that port as 
+    /// </summary>
+    internal static async Task RemoveAndShutdownPortAsync(int port, bool restart)
+    {
+        string type;
+        if (ROOT_SERVER_PORT == port)
+        {
+            // Identify root
+            type = "root";
+        } else if (SSLSecurePorts.Remove(port))
+        {
+            type = "ssl";
+        } else if (InsecurePorts.Remove(port))
+        {
+            type = "http";
+        } else {
+            Console.WriteLine($"Attempted to remove server on port {port}, but no such server was found.");
+            return;
+        }
+
+        if (PortActiveRequests.ContainsKey(port))
+        {
+            // Port was now removed, so is accepting no more requests.
+            // Now, wait until the requests are finished.
+            var tcs = new TaskCompletionSource<bool>();
+            while (!tcs.Task.IsCompleted)
+            {
+                if (PortActiveRequests[port] == BigInteger.Zero)
+                    tcs.SetResult(true);
+            }
+
+            await tcs.Task;
+            PortActiveRequests.Remove(port);
+        }
+
+        if (!PortProcesses.ContainsKey(port))
+        {
+            Console.WriteLine($"Attempted to shut down process for server running on port {port}, but no such process was found.");
+            return;
+        }
+        
+        PortProcesses[port].Kill();
+        PortProcesses.Remove(port);
+
+        if (!restart) return;
+        // Restart server
+        switch (type)
+        {
+            case "ssl":
+                break;
+            case "http":
+                break;
+            case "root":
+                break;
+            default:
+                return;
+        }
     }
 }

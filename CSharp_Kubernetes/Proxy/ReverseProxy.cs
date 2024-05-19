@@ -1,3 +1,5 @@
+using System.Numerics;
+
 namespace CSharp_Kubernetes.Proxy;
 
 using System;
@@ -73,8 +75,13 @@ class ReverseProxy
     {
         using (client)
         {
-            var time = DateTime.Now;
             int targetPort = getNewTargetPort();
+            
+            // Increase Current Request Count
+            if (!ProxyServerHandler.PortActiveRequests.ContainsKey(targetPort))
+                ProxyServerHandler.PortActiveRequests.Add(targetPort, BigInteger.One);
+            else ProxyServerHandler.PortActiveRequests[targetPort]++;
+            
             NetworkStream clientStream = client.GetStream();
             TcpClient targetClient = new TcpClient();
             await targetClient.ConnectAsync(TargetHost, targetPort);
@@ -85,6 +92,9 @@ class ReverseProxy
 
             await Task.WhenAny(clientToTarget, targetToClient);
             targetClient.Close();
+            
+            // Decrease Current Request Count
+            ProxyServerHandler.PortActiveRequests[targetPort]--;
         }
     }
 

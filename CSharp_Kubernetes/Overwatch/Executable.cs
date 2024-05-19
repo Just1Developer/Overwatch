@@ -25,6 +25,8 @@ public static class Executable
     private const string absolutePathWinDebug = absolutePathMacDebug; // Todo
     private static readonly string WebServerRelativePath = Debugger.IsAttached || IS_DEBUG_MODE ?
         (IS_WINDOWS ? absolutePathWinDebug : absolutePathMacDebug) : relativePathProd;
+
+    internal static string GetRelativeRepoPath() => WebServerRelativePath;
     
     /// <summary>
     /// Gets a new Process with the given start info. The process has raising events enabled by default.
