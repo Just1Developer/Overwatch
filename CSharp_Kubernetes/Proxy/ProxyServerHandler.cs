@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using CSharp_Kubernetes.Servers;
 
 namespace CSharp_Kubernetes.Proxy;
 
@@ -138,17 +139,17 @@ public static class ProxyServerHandler
     /// </summary>
     internal static async Task RemoveAndShutdownPortAsync(int port, bool restart)
     {
-        string type;
+        ServerType type;
         if (ROOT_SERVER_PORT == port)
         {
             // Identify root
-            type = "root";
+            type = ServerType.ROOT;
         } else if (SSLSecurePorts.Remove(port))
         {
-            type = "ssl";
+            type = ServerType.SSL;
         } else if (InsecurePorts.Remove(port))
         {
-            type = "http";
+            type = ServerType.HTTP;
         } else {
             Console.WriteLine($"Attempted to remove server on port {port}, but no such server was found.");
             return;
@@ -180,16 +181,6 @@ public static class ProxyServerHandler
 
         if (!restart) return;
         // Restart server
-        switch (type)
-        {
-            case "ssl":
-                break;
-            case "http":
-                break;
-            case "root":
-                break;
-            default:
-                return;
-        }
+        Servers.Servers.LaunchSingular(type);
     }
 }

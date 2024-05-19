@@ -107,7 +107,7 @@ public static class Executable
         {
             WorkingDirectory = WebServerRelativePath,
             FileName = run_process_cmd,
-            Arguments = arguments,
+            Arguments = $"-c \"{arguments}\"",
             CreateNoWindow = true, // This prevents the command window from showing up
             UseShellExecute = false, // Necessary to redirect input/output if needed
             RedirectStandardOutput = true, // To capture the output if needed

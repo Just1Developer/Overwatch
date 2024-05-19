@@ -2,7 +2,7 @@ namespace CSharp_Kubernetes.Deployment;
 
 public class WebDeployment
 {
-    public static async Task DeployNew()
+    public static async Task DeployNew(int targetHTTPS, int targetHTTP, bool rootServer)
     {
         /*
          * Deployment Process:
@@ -25,5 +25,22 @@ public class WebDeployment
          * 8. Mark deployment as complete and print success to console
          * 9. Deployment complete
          */
+
+        Console.WriteLine("\n//////////////////////////////////////////////////////\n\n" +
+                          "Starting Deployment..." +
+                          "\n\n//////////////////////////////////////////////////////\n");
+        bool success = await ProdBuilder.UpdateProductionBuild();
+        if (!success)
+        {
+            
+            Console.WriteLine("\n//////////////////////////////////////////////////////\n\n" +
+                              "Deployment Aborted." +
+                              "\n\n//////////////////////////////////////////////////////\n");
+            return;
+        }
+        await ServerUpdater.UpdateServers(targetHTTPS, targetHTTP, rootServer);
+        Console.WriteLine("\n//////////////////////////////////////////////////////\n\n" +
+                          "Deployment Complete." +
+                          "\n\n//////////////////////////////////////////////////////\n");
     }
 }

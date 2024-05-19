@@ -20,7 +20,9 @@ public class Servers
     private const string _script_http = "http";
     private const string _script_httpdev = "httpdev";
 
-    private static string Command(string cmd) => $"-c \"pnpm {cmd}\"";
+    private static ConcurrentBag<Task> TaskPool = new ();
+
+    private static string Command(string cmd) => $"pnpm {cmd}";
     
     /// <summary>
     /// Launches the internal Nextjs servers. Will always try to run a production build, if available.
@@ -44,26 +46,47 @@ public class Servers
     /// <returns></returns>
     public static Task LaunchServers(int httpsServers = 1, int httpServers = 0, bool rootServer = true)
     {
-        ConcurrentBag<Task> taskPool = new ConcurrentBag<Task>();
-        
         // For Debugging / Testing paths:
         //runNewProcess("-c ls");
         //return Task.WhenAll(taskPool);
         
         for (int https = 0; https < httpsServers; ++https)
         {
-            taskPool.Add(RunNewProcess(script: _script_ssl, altScript: _script_ssldev));
+            LaunchSingular(script: _script_ssl, altScript: _script_ssldev);
         }
         for (int http = 0; http < httpServers; ++http)
         {
-            taskPool.Add(RunNewProcess(script: _script_http, altScript: _script_httpdev));
+            LaunchSingular(script: _script_http, altScript: _script_httpdev);
         }
         if (rootServer && ROOT_AVAILABLE)
         {
-            taskPool.Add(RunNewProcess(script: _script_root, ""));
+            LaunchSingular(script: _script_root, "");
         }
 
-        return Task.WhenAll(taskPool);
+        return Task.WhenAll(TaskPool);
+    }
+
+    internal static void LaunchSingular(ServerType type)
+    {
+        switch (type)
+        {
+            case ServerType.SSL:
+                LaunchSingular(script: _script_ssl, altScript: _script_ssldev);
+                break;
+            case ServerType.HTTP:
+                LaunchSingular(script: _script_http, altScript: _script_httpdev);
+                break;
+            case ServerType.ROOT:
+                LaunchSingular(script: _script_root, "");
+                break;
+            default:
+                return;
+        }
+    }
+
+    private static void LaunchSingular(string script, string altScript)
+    {
+        TaskPool.Add(RunNewProcess(script: script, altScript: altScript));
     }
 
     private static async Task RunNewProcess(string script, string altScript)
