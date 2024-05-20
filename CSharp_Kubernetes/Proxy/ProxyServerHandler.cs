@@ -173,8 +173,11 @@ public static class ProxyServerHandler
             Console.WriteLine($"Attempted to shut down process for server running on port {port}, but no such process was found.");
             return;
         }
-        
-        PortProcesses[port].Kill();
+
+        await PortProcesses[port].StandardInput.WriteLineAsync("^%C");
+        Console.WriteLine("Awaiting Shutdown: " + DateTime.Now);
+        await WaitFor(() => PortProcesses[port].HasExited);
+        Console.WriteLine("Process has exited: " + DateTime.Now);
         PortProcesses.Remove(port);
         Console.WriteLine($"Server from port {port} shut down.");
 

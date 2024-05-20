@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Numerics;
 using CSharp_Kubernetes.Overwatch;
 using CSharp_Kubernetes.Proxy;
 
@@ -116,7 +117,12 @@ public class Servers
                         else if (e.Data.Contains("ROOT")) success = ProxyServerHandler.SetRootPort(port);
                         else Console.WriteLine("Failed to read server type in " + e.Data);
 
-                        if (success) _lastDeployment = DateTime.Now;
+                        if (success)
+                        {
+                            _lastDeployment = DateTime.Now;
+                            ProxyServerHandler.PortProcesses.Add(port, process);
+                            ProxyServerHandler.PortActiveRequests.Add(port, BigInteger.Zero);
+                        }
                     }
                     catch (Exception)
                     {
