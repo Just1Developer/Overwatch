@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text;
+using CSharp_Kubernetes.Deployment;
 using CSharp_Kubernetes.Proxy;
 
 namespace CSharp_Kubernetes.Overwatch;
@@ -35,9 +36,13 @@ public class Overwatch
                 {
                     Console.WriteLine("Overwatch Updates are a WIP");
                 }
-                else if (line == "update")
+                else if (line == "restart-all")
                 {
-                    Console.WriteLine("Updates are a WIP");
+                    await ServerUpdater.UpdateServers();
+                }
+                else if (line == "deploy")
+                {
+                    await WebDeployment.DeployNew();
                 }
                 else if (line == "on")
                 {
@@ -75,7 +80,8 @@ public class Overwatch
                     Console.WriteLine("\n/////////////////////////////////////////////////////" +
                                       "\n\nOverwatch | Help:" +
                                       "\n\now update: Updates Overwatch" +
-                                      "\nupdate: Updates and restarts the server" +
+                                      "\nrestart-all: Restarts the server" +
+                                      "\ndeploy: Deploys the newest build of the website to the servers" +
                                       "\non: If Overwatch is on" +
                                       "\nlist: Lists all running servers and proxies" +
                                       "\n\n/////////////////////////////////////////////////////\n");

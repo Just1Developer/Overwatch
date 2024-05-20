@@ -5,6 +5,11 @@ namespace CSharp_Kubernetes.Deployment;
 
 public class ServerUpdater
 {
+    public static async Task UpdateServers()
+    {
+        await UpdateServers(ProxyServerHandler.SSLSecurePorts.Count, ProxyServerHandler.InsecurePorts.Count,
+            ProxyServerHandler.ROOT_SERVER_PORT >= 0);
+    }
     public static async Task UpdateServers(int targetHTTPS, int targetHTTP, bool rootServer)
     {
         List<int> sslPorts = new List<int>(ProxyServerHandler.SSLSecurePorts);
@@ -23,7 +28,7 @@ public class ServerUpdater
         }
         while (i < targetHTTPS)
         {
-            Servers.Servers.LaunchSingular(ServerType.SSL);
+            await Servers.Servers.LaunchSingular(ServerType.SSL);
             i++;
         }
         
@@ -37,7 +42,7 @@ public class ServerUpdater
         }
         while (i < targetHTTPS)
         {
-            Servers.Servers.LaunchSingular(ServerType.HTTP);
+            await Servers.Servers.LaunchSingular(ServerType.HTTP);
             i++;
         }
         
@@ -46,11 +51,13 @@ public class ServerUpdater
         if (rootPort != -1)
         {
             await RestartServer(rootPort, rootServer);
-        } else if (rootServer) Servers.Servers.LaunchSingular(ServerType.ROOT);
+        } else if (rootServer) await Servers.Servers.LaunchSingular(ServerType.ROOT);
     }
 
     private static async Task RestartServer(int port, bool restart)
     {
+        if (restart) Console.WriteLine($"Restarting server running on port {port}.");
+        else Console.WriteLine($"Shutting down server running on port {port}.");
         await ProxyServerHandler.RemoveAndShutdownPortAsync(port, restart);
     }
 }

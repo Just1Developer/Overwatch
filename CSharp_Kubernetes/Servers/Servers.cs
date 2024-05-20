@@ -44,7 +44,7 @@ public class Servers
     /// <param name="httpServers">The servers running without ssl certificate.</param>
     /// <param name="rootServer">The server that allows root login. Port will be locked from proxy. </param>
     /// <returns></returns>
-    public static Task LaunchServers(int httpsServers = 1, int httpServers = 0, bool rootServer = true)
+    public static async Task LaunchServers(int httpsServers = 1, int httpServers = 0, bool rootServer = true)
     {
         // For Debugging / Testing paths:
         //runNewProcess("-c ls");
@@ -52,41 +52,44 @@ public class Servers
         
         for (int https = 0; https < httpsServers; ++https)
         {
-            LaunchSingular(script: _script_ssl, altScript: _script_ssldev);
+            await LaunchSingular(script: _script_ssl, altScript: _script_ssldev);
         }
         for (int http = 0; http < httpServers; ++http)
         {
-            LaunchSingular(script: _script_http, altScript: _script_httpdev);
+            await LaunchSingular(script: _script_http, altScript: _script_httpdev);
         }
         if (rootServer && ROOT_AVAILABLE)
         {
-            LaunchSingular(script: _script_root, "");
+            await LaunchSingular(script: _script_root, "");
         }
 
-        return Task.WhenAll(TaskPool);
+        await Task.WhenAll(TaskPool);
     }
 
-    internal static void LaunchSingular(ServerType type)
+    internal static async Task LaunchSingular(ServerType type)
     {
         switch (type)
         {
             case ServerType.SSL:
-                LaunchSingular(script: _script_ssl, altScript: _script_ssldev);
+                await LaunchSingular(script: _script_ssl, altScript: _script_ssldev);
                 break;
             case ServerType.HTTP:
-                LaunchSingular(script: _script_http, altScript: _script_httpdev);
+                await LaunchSingular(script: _script_http, altScript: _script_httpdev);
                 break;
             case ServerType.ROOT:
-                LaunchSingular(script: _script_root, "");
+                await LaunchSingular(script: _script_root, "");
                 break;
             default:
                 return;
         }
     }
 
-    private static void LaunchSingular(string script, string altScript)
+    private static DateTime _lastDeployment = DateTime.Now;
+    private static async Task LaunchSingular(string script, string altScript)
     {
+        var old = _lastDeployment;
         TaskPool.Add(RunNewProcess(script: script, altScript: altScript));
+        await ProxyServerHandler.WaitFor(() => old != _lastDeployment);
     }
 
     private static async Task RunNewProcess(string script, string altScript)
@@ -105,11 +108,15 @@ public class Servers
                         int port = int.Parse(e.Data.Split(':')[2]);
                         Console.WriteLine("Registering new port: " + port);
                         str_port = port.ToString();
-                            
-                        if (e.Data.Contains("HTTPS")) ProxyServerHandler.AddSSLPort(port);
-                        else if (e.Data.Contains("HTTP")) ProxyServerHandler.AddSSLPort(port);
-                        else if (e.Data.Contains("ROOT")) ProxyServerHandler.SetRootPort(port);
+
+                        bool success = false;
+                        
+                        if (e.Data.Contains("HTTPS")) success = ProxyServerHandler.AddSSLPort(port);
+                        else if (e.Data.Contains("HTTP")) success = ProxyServerHandler.AddSSLPort(port);
+                        else if (e.Data.Contains("ROOT")) success = ProxyServerHandler.SetRootPort(port);
                         else Console.WriteLine("Failed to read server type in " + e.Data);
+
+                        if (success) _lastDeployment = DateTime.Now;
                     }
                     catch (Exception)
                     {

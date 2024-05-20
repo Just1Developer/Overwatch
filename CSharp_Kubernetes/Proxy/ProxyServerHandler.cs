@@ -61,7 +61,7 @@ public static class ProxyServerHandler
         _tasksFinished = true;
     }
 
-    public static void AddSSLPort(int port)
+    public static bool AddSSLPort(int port)
     {
         if (!SSLSecurePorts.Contains(port))
         {
@@ -70,6 +70,7 @@ public static class ProxyServerHandler
                 SSLSecurePorts.Add(port);
                 PortActiveRequests.Add(port, BigInteger.Zero);
                 Console.WriteLine($"Added Port {port} to HTTPS proxy.");
+                return true;
             }
             else
             {
@@ -80,9 +81,10 @@ public static class ProxyServerHandler
         {
             Console.WriteLine($"Adding of port {port} denied: Port is already in HTTPS proxy.");
         }
+        return false;
     }
 
-    public static void AddHTTPPort(int port)
+    public static bool AddHTTPPort(int port)
     {
         if (!InsecurePorts.Contains(port))
         {
@@ -91,6 +93,7 @@ public static class ProxyServerHandler
                 InsecurePorts.Add(port);
                 PortActiveRequests.Add(port, BigInteger.Zero);
                 Console.WriteLine($"Added Port {port} to HTTP proxy.");
+                return true;
             }
             else
             {
@@ -101,14 +104,16 @@ public static class ProxyServerHandler
         {
             Console.WriteLine($"Adding of port {port} denied: Port is already in HTTP proxy.");
         }
+        return false;
     }
 
-    public static void SetRootPort(int port)
+    public static bool SetRootPort(int port)
     {
         InsecurePorts.Remove(port);
         SSLSecurePorts.Remove(port);
         ROOT_SERVER_PORT = port;
         PortActiveRequests.Add(port, BigInteger.Zero);
+        return true;
     }
 
     /// <summary>
@@ -171,10 +176,12 @@ public static class ProxyServerHandler
         
         PortProcesses[port].Kill();
         PortProcesses.Remove(port);
+        Console.WriteLine($"Server from port {port} shut down.");
 
         if (!restart) return;
         // Restart server
-        Servers.Servers.LaunchSingular(type);
+        await Servers.Servers.LaunchSingular(type);
+        Console.WriteLine($"Server from port {port} restarted.");
     }
 
     internal static async Task WaitFor(Func<bool> waitForFunction)

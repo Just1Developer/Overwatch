@@ -1,7 +1,14 @@
+using CSharp_Kubernetes.Proxy;
+
 namespace CSharp_Kubernetes.Deployment;
 
 public class WebDeployment
 {
+    public static async Task DeployNew()
+    {
+        await DeployNew(ProxyServerHandler.SSLSecurePorts.Count, ProxyServerHandler.InsecurePorts.Count,
+            ProxyServerHandler.ROOT_SERVER_PORT >= 0);
+    }
     public static async Task DeployNew(int targetHTTPS, int targetHTTP, bool rootServer)
     {
         /*
