@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Numerics;
+using CSharp_Kubernetes.Overwatch;
 using CSharp_Kubernetes.Servers;
 
 namespace CSharp_Kubernetes.Proxy;
@@ -68,14 +69,12 @@ public static class ProxyServerHandler
             if (ROOT_SERVER_PORT != port)
             {
                 SSLSecurePorts.Add(port);
-                PortActiveRequests.Add(port, BigInteger.Zero);
+                if (!PortActiveRequests.ContainsKey(port)) PortActiveRequests.Add(port, BigInteger.Zero);
                 Console.WriteLine($"Added Port {port} to HTTPS proxy.");
                 return true;
             }
-            else
-            {
-                Console.WriteLine($"Adding of port {port} denied: Port is ROOT-Host.");
-            }
+            // else:
+            Console.WriteLine($"Adding of port {port} denied: Port is ROOT-Host.");
         }
         else
         {
@@ -91,14 +90,12 @@ public static class ProxyServerHandler
             if (ROOT_SERVER_PORT != port)
             {
                 InsecurePorts.Add(port);
-                PortActiveRequests.Add(port, BigInteger.Zero);
+                if (!PortActiveRequests.ContainsKey(port)) PortActiveRequests.Add(port, BigInteger.Zero);
                 Console.WriteLine($"Added Port {port} to HTTP proxy.");
                 return true;
             }
-            else
-            {
-                Console.WriteLine($"Adding of port {port} denied: Port is ROOT-Host.");
-            }
+            // else:
+            Console.WriteLine($"Adding of port {port} denied: Port is ROOT-Host.");
         }
         else
         {
@@ -112,7 +109,7 @@ public static class ProxyServerHandler
         InsecurePorts.Remove(port);
         SSLSecurePorts.Remove(port);
         ROOT_SERVER_PORT = port;
-        PortActiveRequests.Add(port, BigInteger.Zero);
+        if (!PortActiveRequests.ContainsKey(port)) PortActiveRequests.Add(port, BigInteger.Zero);
         return true;
     }
 
@@ -174,9 +171,12 @@ public static class ProxyServerHandler
             return;
         }
 
-        await PortProcesses[port].StandardInput.WriteLineAsync("^%C");
+        //await PortProcesses[port].StandardInput.WriteLineAsync("^C");
+        Console.WriteLine("huh");
+        Executable.EndProcess(PortProcesses[port]);
+        
         Console.WriteLine("Awaiting Shutdown: " + DateTime.Now);
-        await WaitFor(() => PortProcesses[port].HasExited);
+        //await WaitFor(() => PortProcesses[port].HasExited);
         Console.WriteLine("Process has exited: " + DateTime.Now);
         PortProcesses.Remove(port);
         Console.WriteLine($"Server from port {port} shut down.");

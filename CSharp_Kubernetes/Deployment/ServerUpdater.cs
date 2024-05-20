@@ -12,6 +12,8 @@ public class ServerUpdater
     }
     public static async Task UpdateServers(int targetHTTPS, int targetHTTP, bool rootServer)
     {
+        Console.WriteLine();
+        
         List<int> sslPorts = new List<int>(ProxyServerHandler.SSLSecurePorts);
         List<int> httpPorts = new List<int>(ProxyServerHandler.InsecurePorts);
         int rootPort = ProxyServerHandler.ROOT_SERVER_PORT;
@@ -40,7 +42,7 @@ public class ServerUpdater
             await RestartServer(port, i < targetHTTP);
             i++;
         }
-        while (i < targetHTTPS)
+        while (i < targetHTTP)
         {
             await Servers.Servers.LaunchSingular(ServerType.HTTP);
             i++;

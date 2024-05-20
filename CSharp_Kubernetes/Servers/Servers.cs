@@ -113,21 +113,22 @@ public class Servers
                         bool success = false;
                         
                         if (e.Data.Contains("HTTPS")) success = ProxyServerHandler.AddSSLPort(port);
-                        else if (e.Data.Contains("HTTP")) success = ProxyServerHandler.AddSSLPort(port);
+                        else if (e.Data.Contains("HTTP")) success = ProxyServerHandler.AddHTTPPort(port);
                         else if (e.Data.Contains("ROOT")) success = ProxyServerHandler.SetRootPort(port);
                         else Console.WriteLine("Failed to read server type in " + e.Data);
 
                         if (success)
                         {
                             _lastDeployment = DateTime.Now;
-                            ProxyServerHandler.PortProcesses.Add(port, process);
-                            ProxyServerHandler.PortActiveRequests.Add(port, BigInteger.Zero);
+                            ProxyServerHandler.PortProcesses[port] = process;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
                         string outp = e.Data ?? "<no message>";
                         Console.WriteLine($"Tried and failed to register port: {(outp.Contains(':') ? outp.Split(':')[2] : outp)} (registration failed).");
+                        Console.WriteLine($"Outp: {outp}");
+                        Console.WriteLine($"Error: {ex}");
                     }
                 }
                 else if (e.Data.Contains("Command failed with exit code") && StartDevServerAlternative && !string.IsNullOrEmpty(altScript))

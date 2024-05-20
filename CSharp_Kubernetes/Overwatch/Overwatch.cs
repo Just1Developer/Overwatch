@@ -18,9 +18,9 @@ public class Overwatch
         ConcurrentBag<Task> tasks = new();
         tasks.Add(Servers.Servers.LaunchServers(httpsServers: 3, rootServer: false));
         tasks.Add(ProxyServerHandler.StartReverseProxies());
+        Console.WriteLine("Overwatch is live.");
         tasks.Add(BeginHandleInput());
         
-        Console.WriteLine("Overwatch is live.");
 
         await Task.WhenAll(tasks);
     }
@@ -34,11 +34,20 @@ public class Overwatch
             {
                 if (line == "ow update")
                 {
-                    Console.WriteLine("Overwatch Updates are a WIP");
+                    Console.WriteLine("Overwatch Updates are a WIP. Please update manually, for now.");
                 }
                 else if (line == "restart-all")
                 {
+                    Console.WriteLine("\n/////////////////////////////////////////////////////" +
+                                      "\n\nRestarting All Servers..." +
+                                      "\n\n/////////////////////////////////////////////////////\n");
                     await ServerUpdater.UpdateServers();
+                    Console.WriteLine("\n/////////////////////////////////////////////////////" +
+                                      $"\n\nRestart complete.\n" +
+                                      $"\nSSL Servers: {ProxyServerHandler.SSLSecurePorts.Count}" +
+                                      $"\nHTTP Servers: {ProxyServerHandler.InsecurePorts.Count}" +
+                                      $"\nROOT Server: {(ProxyServerHandler.ROOT_SERVER_PORT > 0 ? "Yes" : "No")}" +
+                                      "\n\n/////////////////////////////////////////////////////\n");
                 }
                 else if (line == "deploy")
                 {

@@ -75,6 +75,45 @@ public static class Executable
         }
     }
 
+    internal static void EndProcess(Process process)
+    {
+        if (IS_WINDOWS)
+        {
+            // Using PowerShell to send Ctrl+C
+            var powershell = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "powershell",
+                    Arguments = $"-Command \"Stop-Process -Id {process.Id} -Force\"",
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            powershell.Start();
+            powershell.WaitForExit();
+        }
+        else
+        {
+            var killProcess = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "/bin/bash",
+                    Arguments = $"-c \"kill -2 {process.Id}\"",
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+            killProcess.Start();
+            killProcess.WaitForExit();
+        }
+    }
+
     internal static ProcessStartInfo GetStartInfo(string workingDirectory, string processName, string arguments)
     {
         return new ProcessStartInfo()
