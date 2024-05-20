@@ -8,7 +8,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="Overwatch\Updater\" />
       <Folder Include="_img\" />
     </ItemGroup>
 

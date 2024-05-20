@@ -5,7 +5,7 @@ using CSharp_Kubernetes.Proxy;
 
 namespace CSharp_Kubernetes.Overwatch;
 
-public class Overwatch
+public static class Overwatch
 {
     private static CancellationTokenSource? _cancellationToken;
     

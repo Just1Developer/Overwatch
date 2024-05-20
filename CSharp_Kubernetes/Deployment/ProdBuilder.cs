@@ -95,6 +95,11 @@ public static class ProdBuilder
     /// </summary>
     private static async Task RestoreOldProductionBuild(string repopath)
     {
+        string nextpath = repopath + ".next";
+        // Delete Build Contents first
+        if (Directory.Exists(nextpath)) Directory.Delete(nextpath, true);
+        await ProxyServerHandler.WaitFor(() => !Directory.Exists(nextpath));
+        
         var targetFolder = Directory.GetDirectories(repopath + "../backup/");
         if (targetFolder.Length == 0)
         {
@@ -115,27 +120,10 @@ public static class ProdBuilder
             return;
         }
         
-        Directory.Move(path, repopath + ".next");
+        Directory.Move(path, nextpath);
         path = $"{path}..";
         Directory.Delete(path, true);
         await ProxyServerHandler.WaitFor(() => !Directory.Exists(path));
-    }
-
-    // FROM: https://stackoverflow.com/a/3822913
-    private static void CopyFilesRecursively(string sourcePath, string targetPath)
-    {
-        if (!Directory.Exists(targetPath)) Directory.CreateDirectory(targetPath);
-        //Now Create all of the directories
-        foreach (string dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
-        {
-            Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
-        }
-
-        //Copy all the files & Replaces any files with the same name
-        foreach (string newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
-        {
-            File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
-        }
     }
 
     public static void _GenerateProdBackup(string repopath)
