@@ -16,10 +16,9 @@ public static class ProdBuilder
         if (Directory.Exists(repopath + ".next"))
         {
             GenerateProdBackup(repopath);
-            Directory.Delete(repopath + ".next");
         }
 
-        Process process = Executable.GetProcess(Executable.GetWebserverCmdInfo("git pull origin main"));
+        Process process = Executable.GetProcess(Executable.GetWebserverCmdInfo("git pull"));
         await Executable.RunProcessAsync(process,
             "GIT PULL", true);
         if (process.ExitCode != 0)

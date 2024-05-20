@@ -4,6 +4,7 @@ using CSharp_Kubernetes.Overwatch;
 
 
 // Testing:
+/*
 string repopath = Executable.GetRelativeRepoPath();
 if (Directory.Exists(repopath + ".next"))
 {
@@ -12,3 +13,6 @@ if (Directory.Exists(repopath + ".next"))
 }
 
 await ProdBuilder._RestoreOldProductionBuild(repopath);
+*/
+
+Console.WriteLine("Success: " + await ProdBuilder.UpdateProductionBuild());
