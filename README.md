@@ -43,10 +43,12 @@ Overwatch provides functionality to deploy the latest release of the web applica
 1. *_'git pull'_* is executed inside the repository folder. If git is not configured in the CLI, this may prompt you to enter a username or password, you are however free to cancel and configure git in your terminal first.
 2. The current production build located in /repository/.next/ is backed up to /backup/<time>/prod/.
 3. *_'pnpm build'_* is executed in the repository folder.
+
    3.1. If the build fails, the deployment process is aborted and the old production build is loaded from the backup.
+
    3.2. If the build fails and the _-persistent_ flag is set to _true_, Overwatch will delete the ***node_modules*** folder and ***package-lock*** files and perform *'pnpm i'* to re-add all dependencies. If the build succeeds now, the deployment proceeds as normal. If not, see 3.1.
-4. When the new production build is ready, the Overwatch will perform a full restart of all servers with all specified **ssl, http and root** arguments. See section about updating for further details.
-5. The deployment is finished and marked as **successful**.
+5. When the new production build is ready, the Overwatch will perform a full restart of all servers with all specified **ssl, http and root** arguments. See section about updating for further details.
+6. The deployment is finished and marked as **successful**.
 
 If the deployment is **successful**, the backup will be deleted unless the _-deleteOld_ flag is set to _false_.
 If the deployment is **not successful**, the /.next/ folder will be deleted and the newest backup will be loaded from the backup folder into the repo as /.next/ folder.
