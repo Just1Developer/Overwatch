@@ -10,7 +10,7 @@ public static class Executable
     private const string run_process_unix = "/bin/bash";
 
     // Windows versions are 0,1,2,3; 4 is unix, 5 is XBox, 6 is MacOS X, 7 is other
-    private static readonly bool IS_WINDOWS = (int) Environment.OSVersion.Platform < 4;
+    internal static readonly bool IS_WINDOWS = (int) Environment.OSVersion.Platform < 4;
     private static readonly string run_process_cmd = IS_WINDOWS ? run_process_win : run_process_unix;
 
     public static void PrintInfo()
