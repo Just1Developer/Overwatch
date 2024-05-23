@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp_Kubernetes", "CSharp_Kubernetes\CSharp_Kubernetes.csproj", "{7B660047-DE40-4BDC-A157-B0F73BC70426}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OW-Bonfire", "OW-Bonfire\OW-Bonfire.csproj", "{30031906-E680-49F5-AB65-72542E61144B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{7B660047-DE40-4BDC-A157-B0F73BC70426}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7B660047-DE40-4BDC-A157-B0F73BC70426}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7B660047-DE40-4BDC-A157-B0F73BC70426}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30031906-E680-49F5-AB65-72542E61144B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30031906-E680-49F5-AB65-72542E61144B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30031906-E680-49F5-AB65-72542E61144B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30031906-E680-49F5-AB65-72542E61144B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
