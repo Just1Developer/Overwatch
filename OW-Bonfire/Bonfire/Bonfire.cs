@@ -8,6 +8,9 @@ public class Bonfire
     private static Dictionary<string, string> _arguments;
     private static bool IS_WINDOWS = false;
     private static string run_process_cmd;
+    
+    private const string run_process_win = "cmd.exe";
+    private const string run_process_unix = "/bin/bash";
 
     private static string newName, oldName;
     

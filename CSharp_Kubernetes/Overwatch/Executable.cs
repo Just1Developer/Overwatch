@@ -4,7 +4,7 @@ namespace CSharp_Kubernetes.Overwatch;
 
 public static class Executable
 {
-    private const bool IS_DEBUG_MODE = true;
+    private const bool IS_DEBUG_MODE = false;
     
     private const string run_process_win = "cmd.exe";
     private const string run_process_unix = "/bin/bash";
@@ -20,7 +20,7 @@ public static class Executable
         Console.WriteLine($"run_process_cmd: {run_process_cmd}");
     }
     
-    private const string relativePathProd = @"/Streamy/";
+    private const string relativePathProd = @"/home/dev/Desktop/Overwatch/Streamy/StreamingService/";
     private const string absolutePathMacDebug = "../../../../../../WebstormProjects/StreamingService/";
     private const string absolutePathWinDebug = absolutePathMacDebug; // Todo
     private static readonly string WebServerRelativePath = Debugger.IsAttached || IS_DEBUG_MODE ?

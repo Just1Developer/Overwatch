@@ -36,7 +36,7 @@ class ReverseProxy
             if (port == -1)
             {
                 port = ProxyServerHandler.getNextSSLPort();
-                Console.Error.WriteLine("Warning: No HTTPS Backend Server Connections available at this time. Defaulting to HTTPS Server (will be empty response)...");
+                Console.Error.WriteLine("Warning: No HTTP Backend Server Connections available at this time. Defaulting to HTTPS Server (will be empty response)...");
             }
             if (port == -1)
             {
