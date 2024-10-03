@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharp_Kubernetes", "CSharp_Kubernetes\CSharp_Kubernetes.csproj", "{7B660047-DE40-4BDC-A157-B0F73BC70426}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OverwatchCS", "OverwatchCS\OverwatchCS.csproj", "{7B660047-DE40-4BDC-A157-B0F73BC70426}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OW-Bonfire", "OW-Bonfire\OW-Bonfire.csproj", "{30031906-E680-49F5-AB65-72542E61144B}"
 EndProject
