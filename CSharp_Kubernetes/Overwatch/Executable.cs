@@ -127,7 +127,7 @@ public static class Executable
         };
     }
 
-    internal static ProcessStartInfo GetCmdInfo(string workingDirectory, string arguments)
+    internal static ProcessStartInfo GetShellStartInfo(string workingDirectory, string arguments)
     {
         return new ProcessStartInfo()
         {

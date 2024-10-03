@@ -152,5 +152,5 @@ public class Servers
         Executable.GetWebserverCmdInfo(Command(script));
 
     private static ProcessStartInfo _debugStartInfo(string script, string workingDir) => 
-        Executable.GetCmdInfo(workingDir, script);
+        Executable.GetShellStartInfo(workingDir, script);
 }

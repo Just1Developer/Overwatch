@@ -4,6 +4,7 @@ namespace OW_Bonfire.Bonfire;
 
 public class Bonfire
 {
+    // todo don't forget chmod +x script on linux
     private static int _overwatchId = -1;
     private static Dictionary<string, string> _arguments;
     private static bool IS_WINDOWS = false;
