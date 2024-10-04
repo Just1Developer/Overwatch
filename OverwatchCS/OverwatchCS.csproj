@@ -9,8 +9,20 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Folder Include="old\" />
+      <Folder Include="Overwatch\Host\" />
       <Folder Include="_img\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="old\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Remove="old\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="old\**" />
     </ItemGroup>
 
 </Project>

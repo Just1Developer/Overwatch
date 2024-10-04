@@ -4,6 +4,10 @@
 
 ---
 
+# Overwatch is currently undergoing a complete remodel and rewrite. The information provided below may be outdated or inaccurate.
+
+---
+
 Overwatch is a .NET-based server backend supporting 24/7 uptime with a kubernetes-inspired infrastructure.
 
 Overwatch also supports updating itself and the production build with no downtime, handling HTTPS and HTTP requests separately, and provides optional hosting of a private root-server instance.

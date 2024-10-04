@@ -1,6 +1,6 @@
 namespace CSharp_Kubernetes.Overwatch;
 
-public class _Overwatch
+public class Overwatch
 {
     
 }
