@@ -1,5 +1,5 @@
 <div style="display: flex; justify-content: center;">
-  <img src="https://github.com/Just1Developer/Overwatch/blob/main/CSharp_Kubernetes/_img/ow11.png?raw=true" alt="Overwatch" width="45%">
+  <img src="https://github.com/Just1Developer/Overwatch/blob/main/OverwatchCS/_img/ow11.png?raw=true" alt="Overwatch" width="45%">
 </div>
 
 ---
